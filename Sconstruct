@@ -1,0 +1,78 @@
+from glob import glob
+import os
+import fnmatch
+
+mmcu = 'atmega8'
+project_name = "main.elf"
+build_dir = 'build/'
+
+src_dir = 'src/'
+include_dir = 'include/'
+
+lib_dir = 'libraries/'
+
+# system installed libs that are needed.
+system_libs = ['']
+
+# local libs are libraries inside of the project libraries folder.
+# asuming the library folder has the same name as the library folderl (lib+foldername).
+local_libs = []
+
+ccflags = ['-Werror']
+# for debugging symbols.
+ccflags.append('-mmcu=' + mmcu)
+ccflags.append('-Os')
+ccflags.append('-ansi')
+ccflags.append('-pedantic-errors')
+ccflags.append('-Wextra')
+ccflags.append('-Wall')
+ccflags.append('--std=c++11')
+
+env = Environment(CC='avr-gcc', CXX='avr-g++')
+env.Append(CCFLAGS=ccflags)
+env.Append(CPPPATH=[include_dir])
+
+# add all the directories in include
+for root, dirnames, filenames in os.walk(include_dir):
+    for dirname in dirnames:
+        path = os.path.join(root, dirname)
+        env.Append(CPPPATH=[path])
+
+# run for local libs
+if len(local_libs):
+    for lib in local_libs:
+        env.Append(CPPPATH=[lib_dir + lib + '/' + 'include/'])
+        env.Append(LIBPATH=[lib_dir + lib + '/' + 'lib/'])
+        env.Append(LIBS=[lib])
+
+# run for system libs
+if len(system_libs):
+    # run for system installed libs
+    for lib in system_libs:
+        env.Append(LIBS=[lib]);
+    print("libs: %s" % env['LIBS'])
+
+# collect source and make object names for them.
+obj_targets = []
+src_files = []
+for root, dirnames, filenames in os.walk(src_dir):
+    for filename in fnmatch.filter(filenames, '*.cpp'):
+        src_files.append(os.path.join(root, filename))
+
+for src in src_files:
+    target = src.replace('.cpp', '.o')
+    obj_targets.append(build_dir + target)
+
+objects = []
+for (obj_target, src_file) in zip(obj_targets, src_files):
+    objects.append(env.Object(target=obj_target, source=src_file))
+
+env.Program(target=build_dir+project_name, source=objects)
+
+Clean('.', build_dir)
+
+if 'CPPPATH' in env:
+    print("cpppath: %s" % env['CPPPATH'])
+if 'LIBPATH' in env:
+    print("libpath: %s" % env['LIBPATH'])
+# print("obj_target: %s, src_files: %s \n" % (str(obj_targets), str(src_files)))
