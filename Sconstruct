@@ -1,16 +1,26 @@
 from glob import glob
+from subprocess import call
 import os
 import fnmatch
 
-mmcu = 'atmega2560'
-mcu = 'm2560'
+# mmcu = 'atmega2560'
+# mcu = 'm2560'
+mmcu = 'atmega328p'
+mcu = 'm328p'
 project_name = 'main'
 programmer = 'arduino'
+serial_port = 'ACM0'
 
 cc = 'avr-gcc'
 cxx = 'avr-g++'
 
 mmcu_flag = '-mmcu=' + mmcu
+
+build_dir = 'build/'
+src_dir = 'src/'
+include_dir = 'include/'
+lib_dir = 'libraries/'
+build_target = build_dir + project_name
 
 avr_objcopy = 'avr-objcopy -j .text -j .data -O ihex $SOURCE $TARGET'
 avr_size = 'avr-size $SOURCE -C -d --mcu=%s' % (mmcu)
@@ -29,18 +39,10 @@ if programmer == 'usbtiny':
 elif programmer == 'usbasp':
     pass
 elif programmer == 'arduino':
-    prog_command = ('avrdude -c dragon_jtag -P usb -p %s -u -U flash:w:$SOURCE' %
-                    mcu);
+    prog_command = ('/usr/bin/avrdude -c arduino -P /dev/tty%s -p %s -b115200 -D -U flash:w:%s:i' %
+                    (serial_port, mcu, build_target + '.hex'))
 elif programmer == 'avrisp':
     pass
-
-
-build_dir = 'build/'
-src_dir = 'src/'
-include_dir = 'include/'
-lib_dir = 'libraries/'
-
-build_target = build_dir + project_name
 
 # system installed libs that are needed.
 system_libs = []
@@ -106,12 +108,12 @@ env.Program(target=build_target + '.elf', source=objects)
 env.Command(build_target + '.hex', build_target + '.elf', avr_objcopy)
 
 # show memory usage
-env.Command(None, build_target+'.elf', avr_size)
+env.Command(None, build_target + '.elf', avr_size)
 
 # uploading
-# SetOption('upload', 1)
-# if not GetOption('upload'):
-#     print("prog_command: ", prog_command)
+upload = ARGUMENTS.get('upload', 0)
+if int(upload):
+    call(prog_command, shell=True)
 
 Clean('.', build_dir)
 
