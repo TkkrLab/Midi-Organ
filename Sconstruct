@@ -3,16 +3,43 @@ import os
 import fnmatch
 
 mmcu = 'atmega8'
-project_name = "main.elf"
-build_dir = 'build/'
+project_name = 'main'
+method = 'usbtiny'
 
+cc = 'avr-gcc'
+cxx = 'avr-g++'
+
+avr_objcopy = 'avr-objcopy -j .text -j .data -O ihex $SOURCE $TARGET'
+avr_size = 'avr-size $SOURCE -C -d --mcu=%s' % (mmcu)
+
+# AddOption for uploading.
+# AddOption('--upload',
+#           type='int',
+#           nargs=0,
+#           action='store',
+#           metavar='hello',
+#           help='starts uploading after compiling')
+
+prog_method = ''
+if method == 'usbtiny':
+    prog_method = ''
+elif method == 'usbasp':
+    pass
+elif method == 'arduino':
+    pass
+elif method == 'avrisp':
+    pass
+
+
+build_dir = 'build/'
 src_dir = 'src/'
 include_dir = 'include/'
-
 lib_dir = 'libraries/'
 
+build_target = build_dir + project_name
+
 # system installed libs that are needed.
-system_libs = ['']
+system_libs = []
 
 # local libs are libraries inside of the project libraries folder.
 # asuming the library folder has the same name as the library folderl (lib+foldername).
@@ -28,7 +55,7 @@ ccflags.append('-Wextra')
 ccflags.append('-Wall')
 ccflags.append('--std=c++11')
 
-env = Environment(CC='avr-gcc', CXX='avr-g++')
+env = Environment(CC=cc, CXX=cxx)
 env.Append(CCFLAGS=ccflags)
 env.Append(CPPPATH=[include_dir])
 
@@ -67,7 +94,19 @@ objects = []
 for (obj_target, src_file) in zip(obj_targets, src_files):
     objects.append(env.Object(target=obj_target, source=src_file))
 
-env.Program(target=build_dir+project_name, source=objects)
+# build .elf
+env.Program(target=build_target + '.elf', source=objects)
+
+# build .hex
+env.Command(build_target + '.hex', build_target + '.elf', avr_objcopy)
+
+# show memory usage
+env.Command(None, build_target+'.hex', avr_size)
+
+# uploading
+# print(GetOption('upload'))
+# if GetOption('upload'):
+#     print("uploading selected!")
 
 Clean('.', build_dir)
 
