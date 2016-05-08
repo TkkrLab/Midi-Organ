@@ -3,10 +3,8 @@ from subprocess import call
 import os
 import fnmatch
 
-# mmcu = 'atmega2560'
-# mcu = 'm2560'
-mmcu = 'atmega328p'
-mcu = 'm328p'
+mmcu = 'atmega2560'
+mcu = 'm2560'
 project_name = 'main'
 programmer = 'arduino'
 serial_port = 'ACM0'
@@ -39,7 +37,7 @@ if programmer == 'usbtiny':
 elif programmer == 'usbasp':
     pass
 elif programmer == 'arduino':
-    prog_command = ('/usr/bin/avrdude -c arduino -P /dev/tty%s -p %s -b115200 -D -U flash:w:%s:i' %
+    prog_command = ('/usr/bin/avrdude -c wiring -P /dev/tty%s -p %s -b115200 -D -U flash:w:%s:i' %
                     (serial_port, mcu, build_target + '.hex'))
 elif programmer == 'avrisp':
     pass
