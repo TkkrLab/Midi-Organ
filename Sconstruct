@@ -16,6 +16,7 @@ mmcu_flag = '-mmcu=' + mmcu
 
 build_dir = 'build/'
 src_dir = 'src/'
+src_ext = '.c'
 include_dir = 'include/'
 lib_dir = 'libraries/'
 build_target = build_dir + project_name
@@ -57,7 +58,7 @@ ccflags.append('-ansi')
 ccflags.append('-pedantic-errors')
 ccflags.append('-Wextra')
 ccflags.append('-Wall')
-ccflags.append('--std=c++11')
+ccflags.append('-std=c99')
 
 env = Environment(CC=cc, CXX=cxx)
 env.Append(CCFLAGS=ccflags)
@@ -88,11 +89,11 @@ if len(system_libs):
 obj_targets = []
 src_files = []
 for root, dirnames, filenames in os.walk(src_dir):
-    for filename in fnmatch.filter(filenames, '*.cpp'):
+    for filename in fnmatch.filter(filenames, '*' + src_ext):
         src_files.append(os.path.join(root, filename))
 
 for src in src_files:
-    target = src.replace('.cpp', '.o')
+    target = src.replace(src_ext, '.o')
     obj_targets.append(build_dir + target)
 
 objects = []
