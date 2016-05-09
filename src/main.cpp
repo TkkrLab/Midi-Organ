@@ -47,7 +47,7 @@ void setup_pins()
     DDRF = 0x00;
 }
 
-void setRow(uint8_t)
+void setRow(uint8_t row)
 {
     PORTK = (1 << row);
 }
@@ -62,8 +62,8 @@ volatile uint8_t row = 0;
 uint8_t data;
 ISR(TIMER0_COMPA_vect)
 {
-    // read collumns
-    uint8_t data readCol();
+    // read pin data
+    data = readCol();
     // set rows.
     setRow(row);
     row++;
@@ -77,7 +77,7 @@ int main(void)
 {
     setup_scan_timer();
     DDRB = (1 << PB7);
-    PORTB = (1 << PB7);
+    PORTB = 0;
     while(1);
     return 0;
 }
